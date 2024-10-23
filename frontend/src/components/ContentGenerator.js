@@ -75,11 +75,9 @@ const ContentGenerator = () => {
       if (editingId) {
         result = await updateContent(editingId, editingContent);
       } else {
-        console.log('Saving new content');
         // Assuming 'article' as the default type, you might want to make this dynamic
         result = await saveContent(editingContent, 'article');
       }
-      console.log('Save result:', result);
       setEditingId(null);
       setEditingContent('');
       setTopic('');

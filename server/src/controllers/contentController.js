@@ -4,7 +4,6 @@ const axios = require('axios');
 exports.generateContent = async (req, res) => {
   try {
     const { topic, type } = req.body;
-    
     let prompt;
     if (type === 'article') {
       prompt = `Write an article about ${topic}`;
@@ -44,15 +43,50 @@ exports.generateContent = async (req, res) => {
   }
 };
 
+exports.generateLandingPages = async (req, res) => {
+  try {
+    const { prompt, feedback, userId } = req.body;
+
+    const fullPrompt = `Create an HTML landing page for: ${prompt}. ${feedback ? `Additional feedback: ${feedback}` : ''}
+    The HTML should be modern, responsive, and include inline CSS for styling. Include placeholder text for main content areas.`;
+
+    const pages = await Promise.all([1, 2, 3].map(async (index) => {
+      const response = await client.getCompletions(
+        process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+        [fullPrompt],
+        {
+          temperature: 0.7,
+          max_tokens: 1000,
+        }
+      );
+
+      const generatedHtml = response.choices[0].text.trim();
+
+      // Save to database
+      const newContent = new Content({
+        type: 'landingPage',
+        content: generatedHtml,
+        userId: userId,
+      });
+      await newContent.save();
+
+      return {
+        id: newContent._id,
+        html: generatedHtml
+      };
+    }));
+
+    res.json(pages);
+  } catch (error) {
+    console.error('Error generating landing pages:', error);
+    res.status(500).json({ message: 'Failed to generate landing pages', error: error.message });
+  }
+};
+
 exports.saveContent = async (req, res) => {
-  console.log('saveContent function called');
   try {
     const { content, type } = req.body;
     const userId = req.userId;
-
-    console.log('Received content:', content);
-    console.log('Received type:', type);
-    console.log('User ID:', userId);
 
     if (!content) {
       return res.status(400).json({ message: 'Content is required' });
@@ -69,7 +103,6 @@ exports.saveContent = async (req, res) => {
     });
 
     const savedContent = await newContent.save();
-    console.log('Saved content:', savedContent);
 
     res.status(201).json({ message: 'Content saved successfully', contentId: savedContent._id });
   } catch (error) {

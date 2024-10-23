@@ -34,18 +34,14 @@ export const logout = () => {
   localStorage.removeItem('token');
 };
 
-export const generateContent = async (topic) => {
-  const response = await api.post('/content/generate', { topic });
+export const generateContent = async (topic, type) => {
+  const response = await api.post('/content/generate', { topic, type });
   return response.data.content;
 };
 
 export const saveContent = async (content, type) => {
   try {
-    console.log('Saving content to:', `${API_URL}/content/save`);
-    console.log('Content:', content);
-    console.log('Type:', type);
     const response = await api.post('/content/save', { content, type });
-    console.log('Save response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error in saveContent:', error.response ? error.response.data : error.message);
@@ -67,5 +63,12 @@ export const deleteContent = async (id) => {
   const response = await api.delete(`/content/${id}`);
   return response.data;
 };
+
+// For pages
+export const generateLandingPages = async (prompt, feedback = '') => {
+  const response = await api.post('/content/generate-landing-pages', { prompt, feedback });
+  return response.data;
+};
+
 
 export default api;
